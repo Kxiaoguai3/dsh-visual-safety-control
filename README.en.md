@@ -1,5 +1,6 @@
 # dsh-visual-safety-control
 
+[![npm](https://img.shields.io/npm/v/dsh-visual-safety-control)](https://www.npmjs.com/package/dsh-visual-safety-control)
 [![CI](https://github.com/Kxiaoguai3/dsh-visual-safety-control/actions/workflows/selftest.yml/badge.svg)](https://github.com/Kxiaoguai3/dsh-visual-safety-control/actions/workflows/selftest.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
