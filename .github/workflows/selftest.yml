@@ -1,0 +1,28 @@
+name: selftest
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  selftest:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pure unit tests (argv + policy, no desktop)
+        run: node scripts/selftest.mjs
+      - name: gui.ps1 must keep its UTF-8 BOM and parse
+        shell: pwsh
+        run: |
+          $p = 'assets/gui.ps1'
+          $b = [IO.File]::ReadAllBytes($p)
+          if (-not ($b[0] -eq 0xEF -and $b[1] -eq 0xBB -and $b[2] -eq 0xBF)) {
+            throw 'gui.ps1 lost its UTF-8 BOM (PowerShell 5.1 will fail on the Chinese strings)'
+          }
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $p), [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) { throw "gui.ps1 parse errors: $($errors[0].Message)" }
+          Write-Host 'BOM + parse ok'

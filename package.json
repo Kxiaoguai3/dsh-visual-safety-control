@@ -1,0 +1,55 @@
+{
+  "name": "dsh-desktop-guard",
+  "version": "0.2.1",
+  "description": "DeepSeek Harness plugin: a lightweight Windows desktop tool (screenshot + OCR + UIA) with a built-in content policy (dangerous labels / sensitive windows / secrets) and action verification (focus readback, hit-test, find ambiguity refusal). Fork of qingying012/dsh-desktop-control (MIT).",
+  "author": "dsh-desktop-guard contributors",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./dsh/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dsh",
+    "assets",
+    "scripts",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "OPERATING-RULES.md",
+    "TESTING.md",
+    "PUBLISH.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "selftest": "node scripts/selftest.mjs"
+  },
+  "os": [
+    "win32"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "desktop",
+    "screenshot",
+    "mouse",
+    "keyboard",
+    "automation",
+    "windows",
+    "policy",
+    "safety",
+    "verification"
+  ]
+}

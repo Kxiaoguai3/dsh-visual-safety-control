@@ -1,0 +1,50 @@
+# dsh bundle layer: mount the desktop-guard tool.
+# Loaded by DeepSeek Harness from package.json's dsh.bundle manifest.
+- insert:
+    - id: desktop-guard
+      name: dsh-desktop-guard
+      config:
+        # --- content policy (refused before PowerShell is spawned) ---
+        policy:
+          enabled: true
+          # Target text / UIA control names that must never be clicked or located.
+          # Matching ignores case, width and whitespace. User lists replace the defaults.
+          denyLabels:
+            - '支付'
+            - '转账'
+            - '确认支付'
+            - '确认购买'
+            - '充值'
+            - '提现'
+            - '删除'
+            - '卸载'
+            - '格式化'
+            - '清空'
+            - '退出登录'
+            - '注销'
+            - '购买'
+            - '下单'
+            - 'pay'
+            - 'transfer'
+            - 'checkout'
+            - 'purchase'
+            - 'withdraw'
+            - 'recharge'
+            - 'delete'
+            - 'uninstall'
+            - 'format'
+            - 'wipe'
+            - 'log out'
+            - 'sign out'
+          # Window-title fragments whose content must not be read or driven.
+          sensitiveWindows: ['银行', '支付', '钱包', '密码', 'Password', 'Bank', 'Wallet', '凭证', 'Authenticator']
+          # Refuse credential-looking `type` payloads.
+          refuseSecrets: true
+          # Key combos to refuse, order-insensitive.
+          denyKeys: []
+          maxSequenceDepth: 5
+        # --- action verification ---
+        # type: refuse when the focused control provably is not editable, read it back.
+        verifyType: true
+        # click: hit-test the point against the named window, report focused control.
+        verifyClick: true

@@ -1,0 +1,8 @@
+# Keep gui.ps1 byte-exact: PowerShell 5.1 needs its UTF-8 BOM, and line-ending
+# normalisation must not touch it.
+* text=auto
+*.ps1 -text
+*.png binary
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
