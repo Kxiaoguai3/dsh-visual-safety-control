@@ -92,6 +92,8 @@ desktop { action: "type", text: "hello", window: "记事本" }
 
 点保存后写入当前 profile 的插件配置，**下一次工具调用立即生效**，不需要重启。也可以继续用 `cordis.patch.yml` 配置，两种方式等价。
 
+> 首次安装后如果设置页里还没看到「视觉安全」，刷新一次 Harness 页面（Ctrl+R）即可加载新的客户端插件。
+
 ## 配置
 
 ```yaml

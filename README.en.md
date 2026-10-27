@@ -90,6 +90,9 @@ After installing, open **Settings → Plugins → Visual safety** to edit the po
 Saving writes the current profile's plugin config and takes effect on the next tool call — no
 restart. Editing `cordis.patch.yml` still works the same way.
 
+> After the first install, refresh the Harness page (Ctrl+R) once so the new client bundle loads and
+> the tab appears.
+
 ## Configuration
 
 ```yaml
