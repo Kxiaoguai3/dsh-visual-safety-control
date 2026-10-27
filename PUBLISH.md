@@ -48,12 +48,35 @@ BOM byte-exact; the same checks run in CI (`.github/workflows/selftest.yml`) on 
 
 ## 3. npm
 
-The name `dsh-desktop-guard` was available on 2026-10-26 (registry check). Before publishing:
+The name `dsh-desktop-guard` is still free on 2026-10-27 (`npm view` → 404 on registry.npmjs.org).
 
-1. Version is `0.2.1` (fork start 0.2.0 plus the P0 fixes); remove `"private"` if present (none).
-2. `npm login` then `npm publish --access public`.
-3. `npm view dsh-desktop-guard version` and install it into a scratch DSH profile:
-   `plugin_manager({ action:"install_bundle", target:"dsh-desktop-guard" })` → `application: "applied"`.
+```powershell
+cd dsh-desktop-guard
+# 0) sanity: 15 files, ~50 kB, gui.ps1 keeps its BOM (verified 2026-10-27)
+npm pack --dry-run --registry=https://registry.npmjs.org
+
+# 1) log in — one interactive step, browser + OTP; must target the real registry
+npm login --registry=https://registry.npmjs.org
+npm whoami --registry=https://registry.npmjs.org
+
+# 2) publish (2FA accounts: add --otp=<6 digits>)
+npm publish --registry=https://registry.npmjs.org --access public
+
+# 3) verify
+npm view dsh-desktop-guard version dist.tarball --registry=https://registry.npmjs.org
+```
+
+**Registry pitfall:** this machine's default registry is `https://registry.npmmirror.com` (a
+read-only mirror). `npm publish` without `--registry` fails or looks in the wrong place — always pass
+`--registry=https://registry.npmjs.org`. The mirror syncs new packages automatically later, so users
+installing through the mirror still get it (with delay).
+
+Then install from npm into a scratch DSH profile:
+`plugin_manager({ action:"install_bundle", target:"dsh-desktop-guard" })` → `application: "applied"`.
+
+Publishing without an interactive login (e.g. CI): create an npm **Automation** token, expose it as
+`NPM_TOKEN`, and add a release workflow (`npm publish --provenance --access public` with
+`registry-url: https://registry.npmjs.org`).
 
 If the name is taken later, publish under a scope: `@<scope>/dsh-desktop-guard` and update the
 bundle patch `name:` accordingly.
