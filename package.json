@@ -1,6 +1,6 @@
 {
   "name": "dsh-visual-safety-control",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Windows desktop-control plugin for DeepSeek Harness: screenshot, local OCR and UI Automation with a content policy (dangerous labels / sensitive windows / secrets) and action verification (hit-test, expect, verifyText). Fork of qingying012/dsh-desktop-control (MIT).",
   "author": "XiaYuehua <2814895010@qq.com> (https://github.com/Kxiaoguai3)",
   "license": "MIT",

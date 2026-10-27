@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 — first npm release under the new name
+
+- Republish after a staged `0.3.0` publish attempt left that version reserved on the registry
+  (npm returns `E409 Cannot publish over previously staged version`). No code changes.
+
 ## 0.3.0 — renamed to dsh-visual-safety-control
 
 - Package, bundle row and plugin name renamed from `dsh-desktop-guard` / `desktop-guard`
