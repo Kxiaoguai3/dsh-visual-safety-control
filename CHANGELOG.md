@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 — renamed to dsh-visual-safety-control
+
+- Package, bundle row and plugin name renamed from `dsh-desktop-guard` / `desktop-guard`
+  to `dsh-visual-safety-control` / `visual-safety-control`. Tool name stays `desktop`.
+- README restructured: `README.md` is now Chinese by default, English moved to `README.en.md`.
+- Install hint and docs updated for the new name; npm users should switch to the new package.
+
 ## 0.2.1 — P0 fixes from the real-session run
 
 ### Added

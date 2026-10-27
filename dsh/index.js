@@ -1,4 +1,4 @@
-// dsh-desktop-guard — DeepSeek Harness plugin (fork of qingying012/dsh-desktop-control, MIT)
+// dsh-visual-safety-control — DeepSeek Harness plugin (fork of qingying012/dsh-desktop-control, MIT)
 //
 // Adds two things to the upstream desktop tool while keeping its zero-Python,
 // single PowerShell implementation:
@@ -42,7 +42,7 @@ import { isAbsolute, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DEFAULT_POLICY, evaluatePolicy, normalizePolicy } from './policy.js'
 
-export const name = 'desktop-guard'
+export const name = 'visual-safety-control'
 
 // `tools` is the registry this plugin contributes the `desktop` tool to.
 export const inject = ['tools']

@@ -1,8 +1,8 @@
-# dsh bundle layer: mount the desktop-guard tool.
+# dsh bundle layer: mount the desktop tool from dsh-visual-safety-control.
 # Loaded by DeepSeek Harness from package.json's dsh.bundle manifest.
 - insert:
-    - id: desktop-guard
-      name: dsh-desktop-guard
+    - id: visual-safety-control
+      name: dsh-visual-safety-control
       config:
         # --- content policy (refused before PowerShell is spawned) ---
         policy:

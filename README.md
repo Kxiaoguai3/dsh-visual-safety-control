@@ -1,80 +1,90 @@
-# dsh-desktop-guard
+# dsh-visual-safety-control
 
-[![npm](https://img.shields.io/npm/v/dsh-desktop-guard)](https://www.npmjs.com/package/dsh-desktop-guard)
-[![CI](https://github.com/Kxiaoguai3/dsh-desktop-guard/actions/workflows/selftest.yml/badge.svg)](https://github.com/Kxiaoguai3/dsh-desktop-guard/actions/workflows/selftest.yml)
+[![CI](https://github.com/Kxiaoguai3/dsh-visual-safety-control/actions/workflows/selftest.yml/badge.svg)](https://github.com/Kxiaoguai3/dsh-visual-safety-control/actions/workflows/selftest.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A [DeepSeek Harness](https://github.com/deepseek-ai) plugin that gives the model a native
-`desktop` tool: **screenshot the Windows screen, locate controls by their text, drive the
-mouse/keyboard** — plus a **content policy** and **action verification** on top.
+DeepSeek Harness 的 Windows 桌面控制插件。给模型一个 `desktop` 工具：截图、OCR、UIA 定位控件、鼠标键盘输入，并带有内容策略和动作校验。
 
-> **Fork notice.** This is a fork of
-> [qingying012/dsh-desktop-control](https://github.com/qingying012/dsh-desktop-control) v0.1.3
-> (MIT). The upstream implementation — bundled `assets/gui.ps1`, local Windows OCR, UIA tree,
-> screenshot grid, `sequence` batching — is kept as-is; the original copyright notice is in
-> [LICENSE](LICENSE) and the delta is recorded in [NOTICE](NOTICE) and [CHANGELOG.md](CHANGELOG.md).
+本仓库基于 [qingying012/dsh-desktop-control](https://github.com/qingying012/dsh-desktop-control) v0.1.3（MIT）修改。
 
-**Why a fork instead of a new plugin?** The upstream already solves the hard, unglamorous part
-(OCR/UIA/screenshot/input inside one PowerShell file, no Python). This fork adds what it lacks:
-content-level safety and machine-checked action results.
+## 功能
 
-> Windows only. `assets/gui.ps1` **must stay UTF-8 with BOM** — Windows PowerShell 5.1 reads a
-> BOM-less file as ANSI and fails to parse the Chinese messages.
+| 能力 | 说明 |
+| :-- | :-- |
+| 截图 | 全屏、指定窗口或区域截图，可选坐标网格和光标标记 |
+| OCR | 本地 Windows OCR，返回文字内容和坐标 |
+| 找控件 | 按 OCR 文字或 UIA 控件名定位，可按窗口过滤；多命中时拒绝点击并列出候选 |
+| 鼠标 | 坐标点击、UIA 控件点击、移动、拖拽、滚轮 |
+| 键盘 | 文本粘贴、组合键；输入前确认窗口在前台、控件可编辑，输入后回读内容 |
+| 窗口 | 列出窗口（HWND / PID / 位置 / 标题），激活指定窗口 |
+| 序列 | 一次调用执行多个步骤，减少往返 |
 
-## What the fork adds
+### 内容策略
 
-| Addition | What it does |
-|---|---|
-| **Content policy** (`dsh/policy.js`) | Refuses dangerous target labels (支付/删除/delete/pay…), sensitive windows (银行/Password…), credential-looking `type` payloads and denied key combos **before PowerShell is spawned**. Irreversible labels (发布/发送/提交…) trigger an `ask` decision through `tools/pre-execute`; without approval support they are denied. The model cannot opt out through arguments. |
-| **`type` verification** | Activates the target window and **refuses to type when it cannot make it foreground**, refuses when the focused control is provably not editable, then pastes and **reads the value back** through UI Automation. |
-| **`click` verification** | Hit-tests the point against the named window — comparing **root windows**, and accepting the **same-PID popup** windows apps open (search dropdowns, UWP frame hosts) — and refuses clicks that would land elsewhere; reports the focused control afterwards. Optional `expect` OCR-checks the landing area, and `verifyText` re-OCRs the window after the click. |
-| **`find` precision** | `exact:true` matches whole lines only; ambiguity now **refuses to click** and lists candidates; `index:N` clicks an explicit match. |
-| **Activation guard** | `activate` / `type` use a documented retry ladder (SetForegroundWindow → real title-bar click → verify), never the old fire-and-forget call. |
+- 危险标签（支付、转账、删除、卸载等）不点击、不查找
+- 敏感窗口（银行、密码、钱包、凭据管理器）不读取、不操作
+- 疑似凭据的输入内容拒绝发送
+- 危险组合键拒绝执行
+- 不可逆动作（发布、发送、提交、购买）默认请求用户确认
 
-## Install
+### 动作校验
 
-Local directory (development / first run):
+- 点击前用 `expect` 校验落点处的文字，防止坐标过期
+- 点击后用 `verifyText` 校验窗口里出现预期结果
+- 点击做 hit-test，支持同进程弹窗和 UWP 窗口，避免误判
+- 输入后通过 UI Automation 回读，确认文字真的写进去了
 
-```js
-plugin_manager({ action: "install_bundle", target: "<absolute path to this package>" })
-```
+## 安装
 
-From npm (after publishing):
+本地目录：
 
 ```js
-plugin_manager({ action: "install_bundle", target: "dsh-desktop-guard" })
+plugin_manager({ action: "install_bundle", target: "<本仓库的绝对路径>" })
 ```
 
-**Do not enable this alongside `dsh-desktop-control`:** both register a tool named `desktop`, and
-a duplicate name in one layer fails activation. Disable the other bundle first.
+npm（发布后）：
 
-## Actions
+```js
+plugin_manager({ action: "install_bundle", target: "dsh-visual-safety-control" })
+```
 
-| action | What it does | Main args |
+不要和 `dsh-desktop-control` 同时启用：两者都会注册名为 `desktop` 的工具，重名会导致加载失败。
+
+## 用法
+
+| action | 作用 | 主要参数 |
 | :-- | :-- | :-- |
-| `find` | Local OCR locates text and returns screen coordinates (optionally clicks). No image. | `text` / `window` / `click` / `exact` / `index` / `threshold` / `screen` |
-| `elements` | UIA control list for a window: name + centre point, no image | `window` / `filter` / `depth` / `all` |
-| `ocr` | Local OCR of an image: text + per-line boxes | `imagePath` / `filter` |
-| `screenshot` | Save a PNG (cursor stamped by default) and return its path | `window` / `region` / `print` / `grid` / `cursor` / `maxWidth` |
-| `windows` | List visible windows (HWND, PID, rect, title) | `top` |
-| `click` | Move and click, or click a control by UIA name | `x` `y` / `uia` `invoke` / `window` / `verify` / `button` `count` |
-| `move` / `drag` / `scroll` | Cursor movement | `x` `y` / `x2` `y2` / `amount` |
-| `type` | Paste text (base64-encoded on the wire), verify focus and readback | `text` / `window` / `verify` |
-| `key` | Key combo, e.g. `ctrl+s` | `key` |
-| `activate` | Bring a window to the front (guarded) | `window` |
-| `pos` / `wait` | Cursor position / sleep | — / `waitMs` |
-| `sequence` | Run several actions in one call | `steps` |
+| `find` | OCR 定位文字并返回屏幕坐标，可直接点击 | `text` / `window` / `click` / `exact` / `index` / `threshold` |
+| `elements` | UIA 控件列表（名称 + 中心坐标） | `window` / `filter` / `depth` / `all` |
+| `ocr` | 对图片做 OCR | `imagePath` / `filter` |
+| `screenshot` | 保存截图并返回路径 | `window` / `region` / `print` / `grid` / `cursor` / `maxWidth` |
+| `windows` | 列出窗口 | `top` |
+| `click` | 点击坐标或 UIA 控件 | `x` `y` / `uia` `invoke` / `window` / `expect` / `verifyText` / `button` `count` |
+| `move` / `drag` / `scroll` | 移动、拖拽、滚轮 | `x` `y` / `x2` `y2` / `amount` |
+| `type` | 粘贴文本 | `text` / `window` / `verify` |
+| `key` | 组合键，例如 `ctrl+s` | `key` |
+| `activate` | 把窗口切到前台 | `window` |
+| `pos` / `wait` | 读取光标位置 / 等待 | — / `waitMs` |
+| `sequence` | 一次执行多个步骤 | `steps` |
 
-All coordinates are **physical pixels** (per-monitor DPI awareness v2 inside the script).
+坐标都是物理像素。
 
-## Content policy
+```js
+// 找控件
+desktop { action: "find", text: "保存", window: "记事本" }
 
-Defaults are on. Matching is case-, width- and whitespace-insensitive (`删 除`, `ＤＥＬＥＴＥ`,
-`Delete all messages` all match). User lists **replace** the defaults.
+// 点击前校验文字，点击后校验结果
+desktop { action: "click", x: 812, y: 460, window: "记事本", expect: "保存", verifyText: "已保存" }
+
+// 输入并回读
+desktop { action: "type", text: "hello", window: "记事本" }
+```
+
+## 配置
 
 ```yaml
-- id: desktop-guard
-  name: dsh-desktop-guard
+- id: visual-safety-control
+  name: dsh-visual-safety-control
   config:
     policy:
       enabled: true
@@ -82,93 +92,51 @@ Defaults are on. Matching is case-, width- and whitespace-insensitive (`删 除`
       sensitiveWindows: ['银行', 'Password', 'Bank']
       refuseSecrets: true
       denyKeys: ['alt+f4']
-      irreversibleLabels: ['发布', '发送', '提交', '发表', 'publish', 'send', 'submit']
+      irreversibleLabels: ['发布', '发送', '提交', 'publish', 'send', 'submit']
       irreversibleMode: ask        # ask | deny | allow
       maxSequenceDepth: 5
     verifyType: true
     verifyClick: true
 ```
 
-Rules: label checks apply to `click`/`find` (`text` and `uia`); sensitive windows block every read
-or drive action on that window (`windows`/`pos`/`wait` still work); `type` payloads matching
-`sk-…`, `api_key=`, `密码：…` are refused; `sequence` steps are inspected recursively and inherit
-the parent window, with a depth limit so nesting cannot bypass the rules. **Irreversible labels**
-are gated separately: `ask` sends the call to the host for approval (falls back to denial when the
-host has no approval support), `deny` refuses outright, `allow` leaves only `denyLabels` in force.
-A refusal is a normal tool error with a message telling the model this is policy, not a malfunction.
+策略在 PowerShell 启动前生效，模型无法通过参数关闭。用户配置里的列表会整表替换默认值。
 
-**Coordinate clicks:** `click` by `x`/`y` supports `expect` (the landing area must contain this
-text — OCR of the target window, or the popup under the point) and `verifyText` (after the click,
-require this text to be visible). For irreversible actions always use text/UIA targets plus
-`verifyText`; see [OPERATING-RULES.md](OPERATING-RULES.md).
-
-## Verification semantics
-
-`type` / `click` return a `verification` object:
-
-| status | Meaning |
-|---|---|
-| `verified` | `type`: the control read back contains the typed text; `verifyText`: the window now shows the required text (`method: post-action-find`). |
-| `unverified` | `type`: readback worked but does not contain the text (it may have been dropped); `verifyText`: the text was not found after the action. |
-| `unknown` | `click`: the action was delivered and hit-tested, but the application outcome is not machine-checked; or UIA cannot read the focused control. |
-| `refused` | The tool refused to act (wrong focus, activation failure, hit-test mismatch, `expect` mismatch, policy `ask` denied). Nothing was typed/clicked. |
-
-Verification never retries an action and never upgrades `unknown` to `verified`.
-
-## Configure
-
-| Option | Default | Meaning |
+| 选项 | 默认值 | 说明 |
 | :-- | :-- | :-- |
-| `enabled` | `true` | `false` registers no tool |
-| `powershellPath` | `powershell.exe` | PowerShell executable |
-| `timeoutMs` | `30000` | Per-call timeout |
-| `screenshotDir` | `$DSH_HOME/desktop-control` | Where screenshots are saved |
-| `screenshotMaxWidth` | `1440` | Long-edge cap; the reply states the scale |
-| `screenshotGrid` | `false` | Stamp the labelled coordinate grid |
-| `screenshotCursor` | `true` | Stamp the cursor crosshair |
-| `keepShots` | `40` | Prune older screenshots |
-| `elementsMaxRows` | `140` | Truncate `elements` (`all:true` disables) |
-| `policy.*` | see above | Content policy |
-| `verifyType` / `verifyClick` | `true` | Per-action verification default |
+| `enabled` | `true` | 关闭后不注册工具 |
+| `powershellPath` | `powershell.exe` | PowerShell 路径 |
+| `timeoutMs` | `30000` | 单次调用超时 |
+| `screenshotDir` | `$DSH_HOME/desktop-control` | 截图保存目录 |
+| `screenshotMaxWidth` | `1440` | 长边上限 |
+| `screenshotGrid` / `screenshotCursor` | `false` / `true` | 坐标网格 / 光标标记 |
+| `keepShots` | `40` | 保留的截图数量 |
+| `elementsMaxRows` | `140` | `elements` 行数上限 |
+| `verifyType` / `verifyClick` | `true` | 默认开启校验 |
 
-## Development notes (learned the hard way)
+## 校验结果
 
-- **Keep `assets/gui.ps1` UTF-8 with BOM.** Editing tools that write without BOM break Windows
-  PowerShell 5.1 parsing (the script then fails on Chinese strings).
-- **Do not pass `--` to `gui.ps1` via `-File`.** PowerShell 5.1 fails argument binding
-  ("A positional parameter cannot be found"); `type` therefore transports its payload as
-  `-b64 <base64>`.
-- `npm run selftest` covers argv construction, policy evaluation and parameter validation without
-  touching the desktop. It is the only test that can run in CI.
-- Reload the plugin after editing `dsh/index.js`; `assets/gui.ps1` is read at spawn time, so its
-  edits apply on the next call.
+| 状态 | 含义 |
+| :-- | :-- |
+| `verified` | 输入回读包含目标文字，或 `verifyText` 在动作后找到了要求的内容 |
+| `unverified` | 回读成功但内容不符，或动作后没有找到 `verifyText` |
+| `unknown` | 动作已送达，但结果无法机器校验 |
+| `refused` | 拒绝执行：焦点不对、切不到前台、hit-test 不匹配、`expect` 失配或策略拦截 |
 
-## Lab test plan
+## 限制
 
-See [TESTING.md](TESTING.md) for the checklist used with lab machines (safety cases, verification
-cases, evidence to collect, and known-flaky areas).
+- 只支持 Windows，并且需要交互式桌面会话；锁屏、UAC 安全桌面、RDP 断开会失败
+- 纯坐标点击不受内容策略判断，建议配合 `expect` / `verifyText`
+- 短标签或形近字 OCR 可能识别错误，用 `exact` 和 `index` 提高精度
+- 不可逆动作默认 `ask`，宿主不支持审批时会直接拒绝
 
-## Limitations
+## 文档
 
-- **`find` depends on OCR.** Short labels are misread (measured `AB01` → `ABOI`, `hello` →
-  `he110`); use `exact`, longer strings, or `threshold` tuning. A miss returns the closest lines.
-- **Coordinate clicks cannot be judged.** The policy inspects `text`/`uia`; a raw `click x,y` has no
-  target semantics. Prefer `uia` / `find`.
-- **Activation can fail** (foreground lock, elevated windows, unattended sessions). `type` and
-  `activate` refuse instead of typing into the wrong window.
-- **UIA is blind to Chromium/Electron/Qt painted content**; use `find`/screenshots for those.
-- **Background capture is blank for some GPU-rendered apps** (`PrintWindow`); activate first.
-- **Coordinate space is physical pixels**; screenshots may be scaled (`scale` in the reply).
-- UAC secure desktop, lock screen, some games/anti-cheat/terminal apps cannot be driven.
-- Windows only.
+- [TESTING.md](TESTING.md)：测试用例和验收清单
+- [OPERATING-RULES.md](OPERATING-RULES.md)：操作规范
+- [CHANGELOG.md](CHANGELOG.md)：版本变化
+- [CONTRIBUTING.md](CONTRIBUTING.md)：提交问题和补丁
+- [PUBLISH.md](PUBLISH.md)：发布流程
 
-## Operating rules
+## 致谢
 
-**Take a fresh screenshot before every action** — the screenshot is the permission to act. Re-read
-the window rect each time (windows move and controls shift), prefer OCR/UIA targets over raw
-coordinates, and for irreversible actions screenshot before, act by text/UIA with `verify`, then
-screenshot after to confirm the result. Full rules: [OPERATING-RULES.md](OPERATING-RULES.md).
-
-## License
-
-MIT, with the upstream copyright notice retained. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+上游实现来自 [qingying012/dsh-desktop-control](https://github.com/qingying012/dsh-desktop-control)（MIT），原始版权声明保留在 [LICENSE](LICENSE)，改动记录在 [NOTICE](NOTICE) 和 [CHANGELOG.md](CHANGELOG.md)。

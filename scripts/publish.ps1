@@ -1,4 +1,4 @@
-# Publish dsh-desktop-guard to npm (works on Windows PowerShell 5.1; ASCII-only on purpose).
+# Publish dsh-visual-safety-control to npm (works on Windows PowerShell 5.1; ASCII-only on purpose).
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1 -DryRun
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1
@@ -84,5 +84,5 @@ $verify = Invoke-Npm @('view', $name, 'version', 'dist.tarball', "--registry=$Re
 Write-Host $verify.Out.Trim()
 Write-Host ''
 Write-Host 'Next: install the published package into a scratch DSH profile:' -ForegroundColor Green
-Write-Host '  plugin_manager({ action: "install_bundle", target: "dsh-desktop-guard" })'
+Write-Host '  plugin_manager({ action: "install_bundle", target: "dsh-visual-safety-control" })'
 Write-Host '  -> expect application: "applied"; then run desktop { action: "windows" } once.'

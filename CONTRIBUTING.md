@@ -1,8 +1,7 @@
 # Contributing
 
-Thanks for testing! This fork exists to make desktop automation **verifiable and policed**, so the
-most valuable reports are the ones where the plugin did the wrong thing or refused something it
-should have allowed.
+Thanks for testing! The most valuable reports are the ones where the plugin did the wrong thing or
+refused something it should have allowed.
 
 ## Before you open an issue
 
@@ -16,7 +15,7 @@ should have allowed.
 
 ```text
 Environment: Windows 11 23H2, 150% DPI, 2 monitors, zh-CN OCR
-Plugin: dsh-desktop-guard 0.2.1 (bundle row desktop-guard)
+Plugin: dsh-visual-safety-control 0.3.0 (bundle row visual-safety-control)
 Call: desktop { action: "click", ... }
 Expected: ...
 Actual: ... (paste the full tool error/output)
