@@ -1,5 +1,9 @@
 # dsh-desktop-guard
 
+[![npm](https://img.shields.io/npm/v/dsh-desktop-guard)](https://www.npmjs.com/package/dsh-desktop-guard)
+[![CI](https://github.com/Kxiaoguai3/dsh-desktop-guard/actions/workflows/selftest.yml/badge.svg)](https://github.com/Kxiaoguai3/dsh-desktop-guard/actions/workflows/selftest.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A [DeepSeek Harness](https://github.com/deepseek-ai) plugin that gives the model a native
 `desktop` tool: **screenshot the Windows screen, locate controls by their text, drive the
 mouse/keyboard** — plus a **content policy** and **action verification** on top.
