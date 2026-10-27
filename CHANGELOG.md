@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — policy editable in Settings
+
+- New settings page: **Settings → Plugins → 视觉安全 / Visual safety** (client half `dsh/client.js`).
+  Edits the volatile `policy` config through the host's settings service, so values persist in the
+  profile patch and apply on the next tool call without a restart.
+- Plugin `Config` schema now declares every option with defaults, and `policy` is volatile.
+- Host JSON route `/dsh-visual-safety-control/policy.json` (loopback only) backs the page.
+- Tool name, action surface and policy semantics are unchanged.
+
 ## 0.3.1 — first npm release under the new name
 
 - Republish after a staged `0.3.0` publish attempt left that version reserved on the registry

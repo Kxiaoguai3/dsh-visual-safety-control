@@ -41,6 +41,7 @@ import { homedir, tmpdir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DEFAULT_POLICY, evaluatePolicy, normalizePolicy } from './policy.js'
+import z from '@deepseek-ai/schemastery'
 
 export const name = 'visual-safety-control'
 
@@ -79,6 +80,45 @@ const DEFAULTS = {
   // `click` hit-tests the point against the target window before clicking and reports
   // the focused control afterwards.
   verifyClick: true,
+}
+
+/** Deep copy of the built-in policy used as the form's default value. */
+const policyDefaults = () => JSON.parse(JSON.stringify(DEFAULT_POLICY))
+
+/**
+ * Config schema. `policy` is volatile, so the DSH settings UI projects it into an
+ * editable form and edits apply live: the plugin reads the ref on every call.
+ */
+export const Config = z.object({
+  enabled: z.boolean().default(true),
+  powershellPath: z.string().default('powershell.exe'),
+  timeoutMs: z.number().default(30_000),
+  screenshotDir: z.string().default(SHOT_DIR),
+  screenshotMaxWidth: z.number().default(1440),
+  screenshotGrid: z.boolean().default(false),
+  screenshotCursor: z.boolean().default(true),
+  keepShots: z.number().default(40),
+  elementsMaxRows: z.number().default(140),
+  verifyType: z.boolean().default(true),
+  verifyClick: z.boolean().default(true),
+  policy: z
+    .object({
+      enabled: z.boolean().default(DEFAULT_POLICY.enabled),
+      denyLabels: z.array(z.string()).default([...DEFAULT_POLICY.denyLabels]),
+      sensitiveWindows: z.array(z.string()).default([...DEFAULT_POLICY.sensitiveWindows]),
+      refuseSecrets: z.boolean().default(DEFAULT_POLICY.refuseSecrets),
+      denyKeys: z.array(z.string()).default([...DEFAULT_POLICY.denyKeys]),
+      irreversibleLabels: z.array(z.string()).default([...DEFAULT_POLICY.irreversibleLabels]),
+      irreversibleMode: z.string().default(DEFAULT_POLICY.irreversibleMode),
+      maxSequenceDepth: z.number().default(DEFAULT_POLICY.maxSequenceDepth),
+    })
+    .default(policyDefaults())
+    .volatile(),
+})
+
+/** Volatile config fields arrive as refs; ordinary fields arrive as plain values. */
+function readLive(value) {
+  return value && typeof value.get === 'function' ? value.get() : value
 }
 
 const ACTIONS = [
@@ -514,13 +554,14 @@ export function apply(ctx, userConfig = {}) {
   const config = { ...DEFAULTS, ...(userConfig || {}) }
   if (!config.enabled) return
   if (!existsSync(SCRIPT)) throw new Error(`desktop: bundled script missing at ${SCRIPT}`)
-  const policy = normalizePolicy(config.policy)
+  // Policy lives in a volatile field: read it fresh on every call so settings edits apply live.
+  const currentPolicy = () => normalizePolicy(readLive(config.policy))
 
   // Ask before irreversible actions (publish/send/submit). Without approval support the
   // host turns `ask` into a denial, which is the safe default.
   ctx.on('tools/pre-execute', async (exec, next) => {
     if (exec?.name !== 'desktop') return next()
-    const decision = evaluatePolicy(policy, exec.arguments)
+    const decision = evaluatePolicy(currentPolicy(), exec.arguments)
     if (decision?.kind === 'deny') {
       return {
         kind: 'deny',
@@ -605,7 +646,7 @@ export function apply(ctx, userConfig = {}) {
     async execute(args, exec) {
       // `ask` decisions are handled by the pre-execute listener (approved ⇒ execute runs);
       // here only hard denials stop the call as a backstop.
-      const decision = evaluatePolicy(policy, args)
+      const decision = evaluatePolicy(currentPolicy(), args)
       if (decision?.kind === 'deny') {
         const error = new Error(decision.message)
         error.code = decision.code
@@ -676,5 +717,105 @@ export function apply(ctx, userConfig = {}) {
       }
       return attachPostCheck(args, { ok: true, action: args.action, output }, exec?.signal)
     },
+  })
+
+  // --- Settings surface ------------------------------------------------------
+  // Small same-origin JSON route for the Client half (Settings -> Plugins ->
+  // 视觉安全). Writes go through the native settings service, so they land in the
+  // profile patch and survive reloads; `policy` is volatile, so a save applies on
+  // the next tool call without restarting the plugin.
+  const SETTINGS_ROUTE = '/dsh-visual-safety-control/policy.json'
+  const PACKAGE_NAME = 'dsh-visual-safety-control'
+
+  function settingsNamespace(editor) {
+    const entry = editor.entries().find((row) => row.options?.name === PACKAGE_NAME)
+    return entry?.options?.id
+  }
+
+  function settingsDescriptor(settings, editor) {
+    const ns = settingsNamespace(editor)
+    if (ns === undefined) return undefined
+    return settings.describe().find((row) => row.ns === ns)
+  }
+
+  ctx.inject(['webServer', 'settings', 'configEditor'], (scope) => {
+    /** Send one JSON response. */
+    const sendJson = (response, status, value) => {
+      const body = JSON.stringify(value)
+      response.writeHead(status, {
+        'content-type': 'application/json; charset=utf-8',
+        'content-length': Buffer.byteLength(body),
+        'cache-control': 'no-store',
+      })
+      response.end(body)
+    }
+
+    /** Read a JSON request body. */
+    const readBody = async (request) => {
+      const chunks = []
+      for await (const chunk of request) chunks.push(chunk)
+      const text = Buffer.concat(chunks).toString('utf8')
+      if (text.trim() === '') return {}
+      try {
+        return JSON.parse(text)
+      } catch {
+        return undefined
+      }
+    }
+
+    scope.effect(
+      () =>
+        scope.webServer.register({
+          kind: 'exact',
+          path: SETTINGS_ROUTE,
+          handler: async (request, response) => {
+            const address = request.socket?.remoteAddress ?? ''
+            if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(address)) {
+              sendJson(response, 403, { error: 'loopback only' })
+              return
+            }
+            const method = (request.method ?? 'GET').toUpperCase()
+            try {
+              if (method === 'GET') {
+                const descriptor = settingsDescriptor(scope.settings, scope.configEditor)
+                sendJson(response, 200, {
+                  ok: true,
+                  revision: descriptor?.revision ?? 0,
+                  policy: currentPolicy(),
+                  defaults: DEFAULT_POLICY,
+                })
+                return
+              }
+              if (method === 'POST') {
+                const body = await readBody(request)
+                if (body === undefined || typeof body?.policy !== 'object' || body.policy === null) {
+                  sendJson(response, 400, { error: 'expected {"policy": {...}}' })
+                  return
+                }
+                const descriptor = settingsDescriptor(scope.settings, scope.configEditor)
+                const ns = settingsNamespace(scope.configEditor)
+                if (descriptor === undefined || ns === undefined) {
+                  sendJson(response, 503, { error: 'the settings service is unavailable for this plugin entry' })
+                  return
+                }
+                const formValue = descriptor.value ?? {}
+                const base = formValue.policy ?? formValue
+                const next = normalizePolicy({ ...base, ...body.policy })
+                if (body.replace === true) await scope.settings.replace(ns, { policy: next }, descriptor.revision)
+                else await scope.settings.update(ns, { policy: next }, descriptor.revision)
+                const fresh = settingsDescriptor(scope.settings, scope.configEditor)
+                sendJson(response, 200, { ok: true, revision: fresh?.revision ?? descriptor.revision, policy: currentPolicy() })
+                return
+              }
+              sendJson(response, 405, { error: 'method not allowed' })
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error)
+              const status = /conflict/i.test(message) ? 409 : 500
+              sendJson(response, status, { error: message })
+            }
+          },
+        }),
+      'visual-safety-control: settings route',
+    )
   })
 }

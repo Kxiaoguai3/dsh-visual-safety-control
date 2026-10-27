@@ -78,6 +78,18 @@ desktop { action: "click", x: 812, y: 460, window: "Notepad", expect: "Save", ve
 desktop { action: "type", text: "hello", window: "Notepad" }
 ```
 
+## Settings
+
+After installing, open **Settings → Plugins → Visual safety** to edit the policy directly:
+
+- enable/disable the content policy
+- dangerous labels, sensitive windows, irreversible labels (one per line)
+- irreversible mode: ask / deny / allow
+- refused key combos and the sequence depth limit
+
+Saving writes the current profile's plugin config and takes effect on the next tool call — no
+restart. Editing `cordis.patch.yml` still works the same way.
+
 ## Configuration
 
 ```yaml

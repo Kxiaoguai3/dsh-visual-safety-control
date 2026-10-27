@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install runtime deps
+        run: npm install --no-audit --no-fund --ignore-scripts
       - name: Pure unit tests (argv + policy, no desktop)
         run: node scripts/selftest.mjs
       - name: gui.ps1 must keep its UTF-8 BOM and parse
