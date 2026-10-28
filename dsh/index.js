@@ -725,10 +725,14 @@ export function apply(ctx, userConfig = {}) {
   // profile patch and survive reloads; `policy` is volatile, so a save applies on
   // the next tool call without restarting the plugin.
   const SETTINGS_ROUTE = '/dsh-visual-safety-control/policy.json'
-  const PACKAGE_NAME = 'dsh-visual-safety-control'
+
+  // The npmjs release is unscoped, but the GitHub Packages mirror is scoped
+  // (`@owner/dsh-visual-safety-control`). Match on the final path segment so the
+  // settings page works for both install forms.
+  const OWN_ENTRY = /(^|\/)dsh-visual-safety-control$/
 
   function settingsNamespace(editor) {
-    const entry = editor.entries().find((row) => row.options?.name === PACKAGE_NAME)
+    const entry = editor.entries().find((row) => OWN_ENTRY.test(String(row.options?.name ?? '')))
     return entry?.options?.id
   }
 

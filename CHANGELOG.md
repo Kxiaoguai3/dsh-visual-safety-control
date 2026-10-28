@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1 — GitHub Packages mirror
+
+- New workflow `.github/workflows/publish-github-packages.yml`: on demand (or on a `v*` tag) it
+  renames the package to `@<owner>/dsh-visual-safety-control` and publishes the same code to
+  GitHub Packages, so the repository's **Packages** panel lists it. The npmjs release stays unscoped.
+- Settings page now also resolves the plugin entry when it is installed from the scoped
+  GitHub Packages name (`@owner/dsh-visual-safety-control`), not just the unscoped npm name.
+
 ## 0.4.0 — policy editable in Settings
 
 - New settings page: **Settings → Plugins → 视觉安全 / Visual safety** (client half `dsh/client.js`).
