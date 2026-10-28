@@ -1,0 +1,41 @@
+name: Publish to GitHub Packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+
+      # GitHub Packages only accepts scoped npm packages, so the tarball
+      # published here is renamed to @<owner>/<name>. The npmjs.org release
+      # keeps the unscoped name; this mirror exists for GitHub Packages users.
+      - name: Scope package name to the repository owner
+        run: |
+          node -e '
+            const fs = require("fs")
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"))
+            const owner = process.env.GITHUB_REPOSITORY.split("/")[0].toLowerCase()
+            pkg.name = `@${owner}/${pkg.name.replace(/^@[^/]+\//, "")}`
+            pkg.publishConfig = { ...(pkg.publishConfig || {}), registry: "https://npm.pkg.github.com" }
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")
+          '
+
+      - name: Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
