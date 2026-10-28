@@ -49,6 +49,10 @@ npm（发布后）：
 plugin_manager({ action: "install_bundle", target: "dsh-visual-safety-control" })
 ```
 
+> GitHub 仓库右侧的 **Packages** 里还有一份 `@kxiaoguai3/dsh-visual-safety-control` 镜像（由 GitHub Actions
+> 自动发布到 GitHub Packages）。它只用于 GitHub 侧展示；日常安装请走上面的 npmjs 名称，GitHub Packages
+> 需要额外配置 `read:packages` 凭据。
+
 不要和 `dsh-desktop-control` 同时启用：两者都会注册名为 `desktop` 的工具，重名会导致加载失败。
 
 ## 用法

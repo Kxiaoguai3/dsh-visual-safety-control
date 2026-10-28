@@ -64,6 +64,25 @@ After the new name is published, deprecate it:
 npm deprecate dsh-desktop-guard "Renamed to dsh-visual-safety-control; install that instead."
 ```
 
+### GitHub Packages mirror (the repo's "Packages" panel)
+
+GitHub Packages only accepts **scoped** npm names, so an extra workflow publishes the same code as
+`@<owner>/dsh-visual-safety-control`. It does not touch the npmjs release.
+
+- Workflow: `.github/workflows/publish-github-packages.yml` (manual dispatch or a `v*` tag).
+- It rewrites `name` in a throwaway checkout, then `npm publish` to `https://npm.pkg.github.com`
+  with `GITHUB_TOKEN` (`permissions: packages: write`) — no PAT or secret needed.
+- Run it after bumping the version:
+
+```powershell
+gh workflow run publish-github-packages.yml   # or: Actions → Publish to GitHub Packages → Run workflow
+```
+
+- Verify: repo → right sidebar **Packages**, or
+  `https://github.com/Kxiaoguai3/dsh-visual-safety-control/pkgs/npm/dsh-visual-safety-control`.
+- A local `npm publish --registry=https://npm.pkg.github.com` needs a classic PAT with
+  `write:packages` (and `read:packages` to read it back); the repository token does not have that.
+
 ## 4. GitHub Release
 
 Tag the commit that matches the published npm version:
