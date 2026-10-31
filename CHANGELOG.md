@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — the policy page moves to the Settings navigation
+
+- The 视觉安全 page is now a **top-level Settings section** (`settings.section`, order 16,
+  directly below 内置插件) instead of a tab hidden inside Settings → Plugins. One click from
+  设置 and no longer nested.
+- The `settings.plugins.tab` registration is gone, so the page appears exactly once.
+- No change to the tool, the policy defaults or the JSON route; installs need a page refresh
+  (Ctrl+R) once to load the new client bundle.
+
 ## 0.4.1 — GitHub Packages mirror
 
 - New workflow `.github/workflows/publish-github-packages.yml`: on demand (or on a `v*` tag) it

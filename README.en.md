@@ -80,7 +80,8 @@ desktop { action: "type", text: "hello", window: "Notepad" }
 
 ## Settings
 
-After installing, open **Settings → Plugins → Visual safety** to edit the policy directly:
+After installing, open **Settings → Visual safety** (a top-level entry in the settings
+panel's left navigation, right below Plugins) to edit the policy directly:
 
 - enable/disable the content policy
 - dangerous labels, sensitive windows, irreversible labels (one per line)

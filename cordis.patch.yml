@@ -2,7 +2,7 @@
 # Loaded by DeepSeek Harness from package.json's dsh.bundle manifest.
 #
 # Policy defaults and the editable settings form come from the plugin Config
-# schema in dsh/index.js. Values written through Settings -> Plugins are stored
+# schema in dsh/index.js. Values written through Settings -> 视觉安全 are stored
 # in the profile's cordis.patch.yml and override these defaults.
 - insert:
     - id: visual-safety-control

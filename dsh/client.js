@@ -1,9 +1,11 @@
 /**
  * dsh-visual-safety-control — browser half.
  *
- * One contribution: the "视觉安全" page inside Settings → Plugins. It edits the
- * plugin's volatile `policy` config through the Host half's same-origin JSON
- * route, so a save lands in the profile patch and applies on the next tool call.
+ * One contribution: a top-level "视觉安全" page in the Settings panel's own
+ * navigation (the `settings.section` seat), so it is one click from 设置 and no
+ * longer nested under 内置插件. It edits the plugin's volatile `policy` config
+ * through the Host half's same-origin JSON route, so a save lands in the profile
+ * patch and applies on the next tool call.
  *
  * Hand-written for the Web module loader: the file the registry serves is the
  * file the browser executes, no build step.
@@ -169,7 +171,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** The Settings → Plugins → 视觉安全 page. */
+    /** The Settings → 视觉安全 page (top-level settings section). */
     function PolicyPage(props) {
       const dict = props?.t === undefined ? (key) => zh[key] ?? key : (key) => props.t(key)
       const text = (key) => dict(key)
@@ -358,12 +360,14 @@ window.__ModuleLoader__.load({
     function apply(ctx) {
       ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'visual-safety-control: dictionaries')
       const bound = ctx.locale.bind(NS)
-      ctx.slots.inject('settings.plugins.tab', () =>
+      // `settings.section` = a page in the Settings panel's left navigation.
+      // `order: 16` puts it directly after 内置插件 (15) and before Agent 预设 (20).
+      ctx.slots.inject('settings.section', () =>
         ctx.slots.register(
           {
-            name: 'settings.plugins.tab',
+            name: 'settings.section',
             id: 'visual-safety-control',
-            order: 30,
+            order: 16,
             locale: NS,
             label: () => bound('tab.label'),
           },

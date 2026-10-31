@@ -720,8 +720,8 @@ export function apply(ctx, userConfig = {}) {
   })
 
   // --- Settings surface ------------------------------------------------------
-  // Small same-origin JSON route for the Client half (Settings -> Plugins ->
-  // 视觉安全). Writes go through the native settings service, so they land in the
+  // Small same-origin JSON route for the Client half (Settings -> 视觉安全).
+  // Writes go through the native settings service, so they land in the
   // profile patch and survive reloads; `policy` is volatile, so a save applies on
   // the next tool call without restarting the plugin.
   const SETTINGS_ROUTE = '/dsh-visual-safety-control/policy.json'
