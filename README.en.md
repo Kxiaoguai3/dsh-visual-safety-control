@@ -3,6 +3,8 @@
 [![npm](https://img.shields.io/npm/v/dsh-visual-safety-control)](https://www.npmjs.com/package/dsh-visual-safety-control)
 [![CI](https://github.com/Kxiaoguai3/dsh-visual-safety-control/actions/workflows/selftest.yml/badge.svg)](https://github.com/Kxiaoguai3/dsh-visual-safety-control/actions/workflows/selftest.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![dsh.so install · dsh 0.2.1-rc.5](https://cdn.dsh.so/badge/install/dsh-visual-safety-control@0.2.1-rc.5.svg)](https://www.dsh.so/artifact/dsh-visual-safety-control/?ref=badge-install)
+[![dsh.so install · dsh 0.2.1-rc.3](https://cdn.dsh.so/badge/install/dsh-visual-safety-control@0.2.1-rc.3.svg)](https://www.dsh.so/artifact/dsh-visual-safety-control/?ref=badge-install)
 
 A Windows desktop-control plugin for DeepSeek Harness. It gives the model a `desktop` tool: screenshots, local OCR, UI Automation control lookup, mouse and keyboard input — plus a content policy and action verification.
 
